@@ -1,0 +1,8 @@
+#! 0-learning-ai-assistant-app-namespace.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: learning-ai-assistant-app
+    labels:
+        com.docker.compose.project: learning-ai-assistant-app
