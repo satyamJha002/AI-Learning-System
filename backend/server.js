@@ -1,64 +1,66 @@
 // Load env first so B2/multer config see B2_* vars when they load
 import "dotenv/config";
-import express from "express"
-import cors from "cors"
-import path from "path"
-import { fileURLToPath } from 'url'
-import errorHandler from './middleware/errorHandler.js'
-import connectDB from './config/db.js'
+import express from "express";
+import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
+import errorHandler from "./middleware/errorHandler.js";
+import connectDB from "./config/db.js";
 
-import authRoutes from "./routes/authRoute.js"
-import documentRoutes from "./routes/documentRoute.js"
-import { isStorageConfigured } from "./config/storage.js"
-import flashcardRoutes from './routes/flashcardRoute.js'
-import aiRoutes from './routes/aiRoute.js'
-import quizRoutes from './routes/quizRoute.js'
-import progressRoutes from "./routes/progressRoute.js"
+import authRoutes from "./routes/authRoute.js";
+import documentRoutes from "./routes/documentRoute.js";
+import { isStorageConfigured } from "./config/storage.js";
+import flashcardRoutes from "./routes/flashcardRoute.js";
+import aiRoutes from "./routes/aiRoute.js";
+import quizRoutes from "./routes/quizRoute.js";
+import progressRoutes from "./routes/progressRoute.js";
 
-const __fileName = fileURLToPath(import.meta.url)
+const __fileName = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__fileName);
 
-const app = express()
+const app = express();
 
-connectDB()
+connectDB();
 
-app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
-}))
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  }),
+);
 
 app.use(express.json());
-app.use(express.urlencoded({extended: true}))
+app.use(express.urlencoded({ extended: true }));
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 /* Routes */
 app.use("/api/auth", authRoutes);
-app.use("/api/documents", documentRoutes)
-app.use('/api/flashcards', flashcardRoutes)
-app.use('/api/ai', aiRoutes)
-app.use('/api/quizzes', quizRoutes)
-app.use('/api/progress', progressRoutes)
+app.use("/api/documents", documentRoutes);
+app.use("/api/flashcards", flashcardRoutes);
+app.use("/api/ai", aiRoutes);
+app.use("/api/quizzes", quizRoutes);
+app.use("/api/progress", progressRoutes);
 
-app.use(errorHandler)
+app.use(errorHandler);
 
-app.use((req, res)=>{
+app.use((req, res) => {
   res.status(404).json({
     sucsess: false,
     error: "Route not found",
-    statusCode: 404
-  })
-})
+    statusCode: 404,
+  });
+});
 
-const PORT = process.env.PORT || 8000
-app.listen(PORT , () => {
-  console.log(`Server running in ${process.env.NODE_ENV} node on port ${PORT}`)
-  console.log(`Document storage: ${isStorageConfigured ? "B2" : "local disk"}`)
-})
+const PORT = process.env.PORT || 8000;
+app.listen(PORT, () => {
+  console.log(`Server running in ${process.env.NODE_ENV} node on port ${PORT}`);
+  console.log(`Document storage: ${isStorageConfigured ? "B2" : "local disk"}`);
+});
 
-process.on("unhandledRejection", (err)=>{
+process.on("unhandledRejection", (err) => {
   console.error(`Error: ${err.message}`);
   process.exit(1);
-})
+});
