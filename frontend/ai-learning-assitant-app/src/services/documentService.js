@@ -41,11 +41,21 @@ const getDocumentById = async (id) => {
   }
 }
 
+/** Fetch PDF as blob by storage key (B2/private). Uses auth. */
+const getDocumentFileBlobByKey = async (storageKey) => {
+  const response = await axiosInstance.get(
+    API_PATHS.DOCUMENTS.GET_DOCUMENT_FILE_BY_KEY(storageKey),
+    { responseType: "blob" }
+  );
+  return response.data;
+};
+
 const documentService = {
   uploadDocument,
   getDocuments,
   deleteDocument,
-  getDocumentById
-}
+  getDocumentById,
+  getDocumentFileBlobByKey,
+};
 
 export default documentService;

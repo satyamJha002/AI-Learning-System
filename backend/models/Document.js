@@ -19,6 +19,11 @@ const documentSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    /** B2 object key; set when file is stored in Backblaze B2 (for delete) */
+    storageKey: {
+      type: String,
+      default: null,
+    },
     fileSize: {
       type: Number,
       required: true

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import documentService from "../../services/documentService";
 import Spinner from "../../components/common/Spinner";
@@ -17,6 +17,9 @@ const DocumentDetailsPage = () => {
   const [document, setDocument] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("Content");
+  const [pdfDisplayUrl, setPdfDisplayUrl] = useState(null);
+  const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   useEffect(() => {
     const fetchDocumentDetails = async () => {
@@ -33,32 +36,64 @@ const DocumentDetailsPage = () => {
     fetchDocumentDetails();
   }, [id]);
 
-  const getPdfUrl = () => {
-    if (!document?.data?.filePath) return null;
-
+  /** For local uploads (no B2): use server URL. For B2 we never use filePath in iframe (401). */
+  const rawPdfUrl = useMemo(() => {
+    if (!document?.data?.filePath || document?.data?.storageKey) return null;
     const filePath = document.data.filePath;
-
     if (filePath.startsWith("http://") || filePath.startsWith("https://")) {
       return filePath;
     }
+    return `${BASE_URL}${filePath.startsWith("/") ? "" : "/"}${filePath}`;
+  }, [document?.data?.filePath, document?.data?.storageKey]);
 
-    const baseUrl = BASE_URL;
+  useEffect(() => {
+    if (!document?.data?.filePath) {
+      setPdfDisplayUrl(null);
+      return;
+    }
+    const storageKey = document.data.storageKey;
+    if (storageKey) {
+      setPdfLoading(true);
+      documentService
+        .getDocumentFileBlobByKey(storageKey)
+        .then((blob) => {
+          const url = URL.createObjectURL(blob);
+          setPdfBlobUrl(url);
+          setPdfDisplayUrl(url);
+        })
+        .catch((err) => {
+          console.error("Failed to load PDF", err);
+          toast.error("Failed to load PDF");
+          setPdfDisplayUrl(null);
+        })
+        .finally(() => setPdfLoading(false));
+      return;
+    }
+    setPdfDisplayUrl(rawPdfUrl ?? null);
+  }, [document?.data?.filePath, document?.data?.storageKey, rawPdfUrl]);
 
-    return `${baseUrl}${filePath.startsWith("/") ? "" : "/"}${filePath}`;
-  };
+  useEffect(() => {
+    return () => {
+      if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+    };
+  }, [pdfBlobUrl]);
 
   const renderContent = () => {
     if (loading) {
       return <Spinner />;
     }
 
-    // console.log('Document', document)
-
     if (!document || !document.data || !document.data.filePath) {
       return <div className="text-center p-8">PDF not available</div>;
     }
 
-    const pdfUrl = getPdfUrl();
+    if (pdfLoading || !pdfDisplayUrl) {
+      return (
+        <div className="bg-white border border-gray-300 rounded-lg overflow-hidden shadow-sm p-8 flex items-center justify-center min-h-[200px]">
+          <Spinner />
+        </div>
+      );
+    }
 
     return (
       <div className="bg-white border border-gray-300 rounded-lg overflow-hidden shadow-sm">
@@ -67,10 +102,10 @@ const DocumentDetailsPage = () => {
             Document Viewer
           </span>
           <a
-            href={pdfUrl}
+            href={pdfDisplayUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 font-medium transition-color"
+            className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
           >
             <ExternalLink size={16} />
             Open in new tab
@@ -78,7 +113,7 @@ const DocumentDetailsPage = () => {
         </div>
         <div className="bg-gray-100 p-1">
           <iframe
-            src={pdfUrl}
+            src={pdfDisplayUrl}
             className="w-full h-[70vh] bg-white rounded border border-gray-300"
             title="PDF Viewer"
             frameBorder="0"

@@ -13,6 +13,9 @@ export const API_PATHS = {
     UPLOAD: "/api/documents/upload",
     GET_DOCUMENTS: "/api/documents",
     GET_DOCUMENT_BY_ID: (id) => `/api/documents/${id}`,
+    /** Serve file by B2/storage key (auth required). Use for B2/private files. */
+    GET_DOCUMENT_FILE_BY_KEY: (key) =>
+      `/api/documents/file/${encodeURIComponent(key)}`,
     UPDATE_DOCUMENT: (id) => `/api/documents/${id}`,
     DELETE_DOCUMENT: (id) => `/api/documents/${id}`,
   },

@@ -1,6 +1,5 @@
-import dotenv from "dotenv"
-dotenv.config()
-
+// Load env first so B2/multer config see B2_* vars when they load
+import "dotenv/config";
 import express from "express"
 import cors from "cors"
 import path from "path"
@@ -10,6 +9,7 @@ import connectDB from './config/db.js'
 
 import authRoutes from "./routes/authRoute.js"
 import documentRoutes from "./routes/documentRoute.js"
+import { isStorageConfigured } from "./config/storage.js"
 import flashcardRoutes from './routes/flashcardRoute.js'
 import aiRoutes from './routes/aiRoute.js'
 import quizRoutes from './routes/quizRoute.js'
@@ -55,6 +55,7 @@ app.use((req, res)=>{
 const PORT = process.env.PORT || 8000
 app.listen(PORT , () => {
   console.log(`Server running in ${process.env.NODE_ENV} node on port ${PORT}`)
+  console.log(`Document storage: ${isStorageConfigured ? "B2" : "local disk"}`)
 })
 
 process.on("unhandledRejection", (err)=>{
